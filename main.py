@@ -17,6 +17,11 @@ devel_wav_files = [file for file in all_files if file.endswith('.wav') and file.
 
 # Create an instance of the AudioDataset class
 train_dataset = AudioDataset(train_wav_files, train_labels['label'].values.tolist())
+test_dataset = AudioDataset(test_wav_files, test_labels['label'].values.tolist())
+devel_dataset = AudioDataset(devel_wav_files, devel_labels['label'].values.tolist())
 
 # Create a DataLoader instance to load batches of data
-data_loader = DataLoader(train_dataset, batch_size=32)
+train_data_loader = DataLoader(train_dataset, batch_size=32)
+test_data_loader = DataLoader(test_dataset, batch_size=32)
+devel_data_loader = DataLoader(devel_dataset, batch_size=32)
+
