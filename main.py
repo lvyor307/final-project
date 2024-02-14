@@ -33,8 +33,8 @@ label_map = {'Prolongation': 0,
              'WordRepetition': 6,
              'Garbage': 7}
 
-train_wav_files['label'] = train_wav_files['label'].map(label_map)
-devel_wav_files['label'] = devel_wav_files['label'].map(label_map)
+train_labels['label'] = train_labels['label'].map(label_map)
+devel_labels['label'] = devel_labels['label'].map(label_map)
 
 # Create an instance of the AudioDataset class
 train_dataset = AudioDataset(train_wav_files, train_labels['label'].values.tolist())

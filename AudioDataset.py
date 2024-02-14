@@ -22,6 +22,9 @@ class AudioDataset(Dataset):
         if waveform.size(1) < self.max_length:
             pad_amount = self.max_length - waveform.size(1)
             waveform = torch.nn.functional.pad(waveform, (0, pad_amount))
+        # Apply truncate if necessary
+        elif waveform.size(1) > self.max_length:
+            waveform = waveform[:, :self.max_length]
 
         label_tensor = torch.tensor(label)
         return waveform, label_tensor
