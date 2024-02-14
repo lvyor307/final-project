@@ -108,17 +108,4 @@ for epoch in range(num_epochs):
         accuracy = total_correct / total_samples
         print(f"Epoch [{epoch + 1}/{num_epochs}], Development Accuracy: {accuracy:.4f}")
 
-# Evaluate the trained model on the test set
-model.eval()
-with torch.no_grad():
-    total_correct = 0
-    total_samples = 0
-    for inputs, labels in test_data_loader:
-        inputs, labels = inputs.to(device), labels.to(device)
-        outputs = model(inputs)
-        _, predicted = torch.max(outputs, 1)
-        total_correct += (predicted == labels).sum().item()
-        total_samples += labels.size(0)
 
-    accuracy = total_correct / total_samples
-    print(f"Test Accuracy: {accuracy:.4f}")
