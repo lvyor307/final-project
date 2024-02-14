@@ -9,6 +9,9 @@ class AudioDataset(Dataset):
         self.labels = labels
         self.transform = transform
 
+    def __len__(self):
+        return len(self.file_paths)
+
     def __getitem__(self, idx):
         audio_path = self.file_paths[idx]
         label = self.labels[idx]
