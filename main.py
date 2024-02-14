@@ -9,15 +9,32 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-train_labels = pd.read_csv('compare22-KSF/lab/train.csv')
-test_labels = pd.read_csv('compare22-KSF/lab/test.csv')
-devel_labels = pd.read_csv('compare22-KSF/lab/devel.csv')
+
+train_labels = pd.read_csv('compare22-KSF/lab/train.csv').sort_values(by='filename')
+test_labels = pd.read_csv('compare22-KSF/lab/test.csv').sort_values(by='filename')
+devel_labels = pd.read_csv('compare22-KSF/lab/devel.csv').sort_values(by='filename')
+# convert the test labels to nan
+test_labels['label'] = float('nan')
+
 
 directory = 'compare22-KSF/wav'
 all_files = os.listdir(directory)
-train_wav_files = [file for file in all_files if file.endswith('.wav') and file.startswith('train')]
-test_wav_files = [file for file in all_files if file.endswith('.wav') and file.startswith('test')]
-devel_wav_files = [file for file in all_files if file.endswith('.wav') and file.startswith('devel')]
+train_wav_files = sorted([os.path.join(directory, file) for file in all_files if file.startswith('train')])
+devel_wav_files = sorted([os.path.join(directory, file) for file in all_files if file.startswith('devel')])
+test_wav_files = sorted([os.path.join(directory, file) for file in all_files if file.startswith('test')])
+
+# Create a label map dictionary for mapping the string labels to integers
+label_map = {'Prolongation': 0,
+             'no_disfluencies': 1,
+             'Fillers': 2,
+             'Block': 3,
+             'Modified': 4,
+             'SoundRepetition': 5,
+             'WordRepetition': 6,
+             'Garbage': 7}
+
+train_wav_files['label'] = train_wav_files['label'].map(label_map)
+devel_wav_files['label'] = devel_wav_files['label'].map(label_map)
 
 # Create an instance of the AudioDataset class
 train_dataset = AudioDataset(train_wav_files, train_labels['label'].values.tolist())
