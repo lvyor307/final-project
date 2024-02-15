@@ -31,7 +31,7 @@ class HyperParameterTuning:
                           num_layers=num_layers,
                           num_classes=num_classes)
         # Move model to GPU if available
-        model.to(self.device)
+        model.to()
         optimizer = optimizer(model.parameters(), lr=learning_rate)
         # Training loop
         for epoch in range(num_epochs):

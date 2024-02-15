@@ -49,7 +49,7 @@ param_grid = {
     'hidden_size':  [32, 64, 128],
     'num_layers': [2, 4, 6],
     'num_classes': [train_labels['label'].nunique()],
-    'criterion': [nn.CrossEntropyLoss(), nn.BCELoss()],
+    'criterion': [nn.CrossEntropyLoss()],
     'learning_rate': [0.001, 0.01],
     'optimizer': [optim.Adam, optim.SGD],
     'num_epochs': [10, 15, 20, 25, 30]
