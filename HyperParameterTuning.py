@@ -64,7 +64,7 @@ class HyperParameterTuning:
                     total_samples += labels.size(0)
 
                 accuracy = total_correct / total_samples
-                print(f"{model} === Epoch [{epoch + 1}/{num_epochs}], devel Accuracy: {accuracy:.4f}")
+                print(f"{self.n_model} === Epoch [{epoch + 1}/{num_epochs}], devel Accuracy: {accuracy:.4f}")
         model_name = f"model_{self.n_model}"
         with open(f'{model_name}.pkl', 'wb') as f:
             pickle.dump(model, f)
