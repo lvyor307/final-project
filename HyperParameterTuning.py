@@ -1,9 +1,7 @@
-import itertools
-
 import torch
 from torch.utils.data import DataLoader
 from sklearn.model_selection import ParameterGrid
-
+import pickle
 
 from Model import AudioLSTM
 
@@ -67,7 +65,9 @@ class HyperParameterTuning:
 
                 accuracy = total_correct / total_samples
                 print(f"{model} === Epoch [{epoch + 1}/{num_epochs}], devel Accuracy: {accuracy:.4f}")
-
+        model_name = f"model_{self.n_model}"
+        with open(f'{model_name}.pkl', 'wb') as f:
+            pickle.dump(model, f)
         self.n_model += 1
         return accuracy
 
@@ -80,5 +80,5 @@ class HyperParameterTuning:
         """
         for hp_set in self.list_of_hp_dicts:
             accuracy = self._train(X_train, X_devel, **hp_set)
-            self.accuracy.append(accuracy)
+            self.accuracy.update({str(self.n_model): accuracy})
 
