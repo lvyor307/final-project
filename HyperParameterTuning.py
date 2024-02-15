@@ -81,3 +81,4 @@ class HyperParameterTuning:
         for hp_set in self.list_of_hp_dicts:
             accuracy = self._train(X_train, X_devel, **hp_set)
             self.accuracy.append(accuracy)
+
