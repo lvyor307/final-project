@@ -57,4 +57,4 @@ param_grid = {
 
 hpt = HyperParameterTuning(param_grid=param_grid)
 hpt.fit(train_data_loader, devel_data_loader)
-aa = 1
+hpt.print_best_model()

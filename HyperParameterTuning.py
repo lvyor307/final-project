@@ -13,7 +13,7 @@ class HyperParameterTuning:
         # Create a list of dictionaries for each combination
         self.list_of_hp_dicts = list(ParameterGrid(param_grid))
         self.n_model = 1
-        self.accuracy = []
+        self.accuracy_dict = {}
 
     def _train(self, X_train: DataLoader, X_devel: DataLoader,
               input_size: int, hidden_size: int,
@@ -82,3 +82,11 @@ class HyperParameterTuning:
             accuracy = self._train(X_train, X_devel, **hp_set)
             self.accuracy.update({str(self.n_model): accuracy})
 
+    def print_best_model(self):
+        """
+        Get the best hyperparameters
+        :return:
+        """
+        # Get the key-value pair with the maximum value
+        max_pair = max(self.accuracy_dict.items(), key=lambda x: x[1])
+        print(max_pair)
