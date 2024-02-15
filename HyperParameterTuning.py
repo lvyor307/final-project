@@ -80,7 +80,7 @@ class HyperParameterTuning:
         """
         for hp_set in self.list_of_hp_dicts:
             accuracy = self._train(X_train, X_devel, **hp_set)
-            self.accuracy.update({str(self.n_model): accuracy})
+            self.accuracy_dict.update({str(self.n_model): accuracy})
 
     def print_best_model(self):
         """
