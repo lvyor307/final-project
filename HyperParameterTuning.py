@@ -90,3 +90,4 @@ class HyperParameterTuning:
         # Get the key-value pair with the maximum value
         max_pair = max(self.accuracy_dict.items(), key=lambda x: x[1])
         print(max_pair)
+# model 15 acc = 0.45213849287169044
