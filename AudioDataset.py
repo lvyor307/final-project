@@ -2,6 +2,7 @@ import torchaudio
 from torch.utils.data import Dataset
 import torch
 
+
 class AudioDataset(Dataset):
     def __init__(self, file_paths: list, labels: list, max_length: int = 48000, transform=None):
         self.file_paths = file_paths
@@ -28,5 +29,3 @@ class AudioDataset(Dataset):
 
         label_tensor = torch.tensor(label)
         return waveform, label_tensor
-
-
