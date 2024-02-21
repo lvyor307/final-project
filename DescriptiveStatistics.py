@@ -3,9 +3,10 @@ import pandas as pd
 import os
 import torchaudio
 import librosa
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.graph_objects as go
+import plotly.subplots as sp
 from scipy.stats import mannwhitneyu
+
 
 class DescriptiveStatistics:
     def __init__(self):
@@ -42,42 +43,40 @@ class DescriptiveStatistics:
 
     def plot_feature_distribution(self, feature_name):
         """
-        Plots histograms and box plots for a specified feature across the datasets.
+        Plots histograms and box plots for a specified feature across the train, test, and devel datasets.
         """
-        plt.figure(figsize=(14, 6))
+        # Create subplots: one row, two columns
+        fig = sp.make_subplots(rows=1, cols=2,
+                               subplot_titles=(f"Histogram of {feature_name}", f"Box Plot of {feature_name}"))
+
+        # Data preparation
+        datasets = {'Train': self.train_stats, 'Test': self.test_stats, 'Devel': self.devel_stats}
+        colors = {'Train': 'blue', 'Test': 'red', 'Devel': 'green'}
 
         # Histograms
-        plt.subplot(1, 2, 1)
-        sns.histplot(self.train_stats[feature_name], label='Train', kde=True, stat="density", linewidth=0)
-        sns.histplot(self.test_stats[feature_name], label='Test', kde=True, stat="density", linewidth=0, color='red')
-        sns.histplot(self.devel_stats[feature_name], label='Devel', kde=True, stat="density", linewidth=0,
-                     color='green')
-        plt.title(f'Histogram of {feature_name}')
-        plt.xlabel(feature_name)
-        plt.ylabel('Density')
-        plt.legend()
+        for name, df in datasets.items():
+            fig.add_trace(go.Histogram(x=df[feature_name], name=name, opacity=0.6, marker_color=colors[name]), row=1, col=1)
 
-        # Box Plots
-        plt.subplot(1, 2, 2)
-        sns.boxplot(
-            data=[self.train_stats[feature_name], self.test_stats[feature_name], self.devel_stats[feature_name]],
-            notched=True,
-            meanline=True,
-            showmeans=True,
-            meanprops={"color": "red", "ls": "-", "lw": 2},
-            medianprops={"visible": False},
-            whiskerprops={"color": "black", "ls": "--"},
-            showcaps=True,
-            showbox=True,
-            flierprops={"marker": "o", "markersize": 4},
-            labels=['Train', 'Test', 'Devel'])
-        plt.title(f'Box Plot of {feature_name}')
-        plt.xlabel('Dataset')
-        plt.ylabel(feature_name)
+        # Box plots
+        for name, df in datasets.items():
+            fig.add_trace(go.Box(y=df[feature_name], name=name, boxmean='sd', marker_color=colors[name]), row=1, col=2)
 
-        plt.tight_layout()
-        plt.show()
+        # Update layout for aesthetics
+        fig.update_layout(
+            title_text=f"Distribution of {feature_name} Across Datasets",
+            bargap=0.2,  # Gap between bars of adjacent location coordinates
+        )
 
+        # Update x-axis properties for the histogram
+        fig.update_xaxes(title_text=feature_name, row=1, col=1)
+
+        # Update y-axis properties for the histogram
+        fig.update_yaxes(title_text="Count", row=1, col=1)
+
+        # Update y-axis properties for the box plot
+        fig.update_yaxes(title_text=feature_name, row=1, col=2)
+
+        fig.show()
     def compare_feature_distributions(self, feature_name):
         """
         Performs a Mann-Whitney U test to compare feature distributions between train and devel datasets.
@@ -98,6 +97,7 @@ test_wav_files = sorted([os.path.join(directory, file) for file in all_files if 
 
 ds = DescriptiveStatistics()
 ds.collect(train_wav_files, target_file_name='compare22-KSF/lab/train.csv', attr_name='train_stats')
-ds.collect(devel_wav_files, target_file_name='compare22-KSF/lab/train.csv', attr_name='test_stats')
-ds.collect(train_wav_files, target_file_name='compare22-KSF/lab/train.csv', attr_name='devel_stats')
-a = 1
+ds.collect(test_wav_files, target_file_name='compare22-KSF/lab/test.csv', attr_name='test_stats')
+ds.collect(devel_wav_files, target_file_name='compare22-KSF/lab/devel.csv', attr_name='devel_stats')
+ds.plot_feature_distribution('tempo')
+a=1
