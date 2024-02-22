@@ -5,7 +5,7 @@ import torchaudio
 import librosa
 import plotly.graph_objects as go
 import plotly.subplots as sp
-from scipy.stats import mannwhitneyu
+import plotly.express as px
 
 
 class DescriptiveStatistics:
@@ -77,17 +77,26 @@ class DescriptiveStatistics:
         fig.update_yaxes(title_text=feature_name, row=1, col=2)
 
         fig.show()
-    def compare_feature_distributions(self, feature_name):
+
+    def plot_grouped_feature_distribution(self, feature_name, groupby_column):
         """
-        Performs a Mann-Whitney U test to compare feature distributions between train and devel datasets.
+        Plots box plots for a specified feature grouped by another column across the datasets.
+
+        :param feature_name: The name of the feature to plot.
+        :param groupby_column: The name of the column to group by.
         """
-        stat, p = mannwhitneyu(self.train_stats[feature_name], self.devel_stats[feature_name])
-        print(
-            f'Mann-Whitney U test for {feature_name} between Train and Devel datasets:\nStatistics={stat:.3f}, p={p:.3f}')
-        if p > 0.05:
-            print('Same distribution (fail to reject H0)')
-        else:
-            print('Different distribution (reject H0)')
+        # Combine the datasets for plotting, with an additional column indicating the dataset source
+        self.train_stats['Dataset'] = 'Train'
+        self.devel_stats['Dataset'] = 'Devel'
+        combined_df = pd.concat([self.train_stats, self.devel_stats], ignore_index=True)
+
+        # Plot using Plotly Express
+        fig = px.box(combined_df, x=groupby_column, y=feature_name, color='Dataset',
+                     title=f"Distribution of {feature_name} grouped by {groupby_column}",
+                     labels={groupby_column: groupby_column, feature_name: feature_name})
+        fig.update_layout(showlegend=True)
+        fig.show()
+
 
 directory = 'compare22-KSF/wav'
 all_files = os.listdir(directory)

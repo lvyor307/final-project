@@ -1,5 +1,8 @@
+import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
+from pykalman import KalmanFilter
 
 
 class AudioLSTM(nn.Module):
@@ -24,3 +27,30 @@ class AudioLSTM(nn.Module):
         out = self.fc(out[:, -1, :])
         out = self.relu(out)
         return out
+
+
+class FeaturesEngineering:
+    def __init__(self, methods: list):
+        self.methods = methods
+        self.methods_dict = {'kalman_filter': self.apply_fourier_transform,
+                              'fourier_transform': self.apply_kalman_filter}
+
+    @staticmethod
+    def apply_kalman_filter(signal):
+        kf = KalmanFilter(initial_state_mean=0, n_dim_obs=1)
+        # You may need to adjust the parameters based on your specific needs
+        filtered_signal, _ = kf.filter(signal)
+        return filtered_signal.flatten()
+
+    @staticmethod
+    def apply_fourier_transform(signal, sample_rate):
+        freqs = np.fft.rfftfreq(len(signal), d=1 / sample_rate)
+        fft_spectrum = np.fft.rfft(signal)
+        amplitude_spectrum = np.abs(fft_spectrum)
+        return freqs, amplitude_spectrum
+
+    def fit(self, X: pd.DataFrame, y: pd.Series):
+        for method in self.methods:
+            if method in self.methods_dict:
+                X[method] = method(X)
+
