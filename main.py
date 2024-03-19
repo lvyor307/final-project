@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from torch.utils.data import DataLoader
 from AudioDataset import AudioDataset
+from DescriptiveStatistics import DescriptiveStatistics
 from HyperParameterTuning import HyperParameterTuning
 import torch.nn as nn
 import torch.optim as optim
@@ -33,6 +34,12 @@ label_map = {
 
 train_labels['label'] = train_labels['label'].map(label_map)
 devel_labels['label'] = devel_labels['label'].map(label_map)
+
+ds = DescriptiveStatistics(train_wav_files, test_wav_files, devel_wav_files)
+ds.run()
+train_df = ds.collect(train_wav_files, target_file_name=train_labels, attr_name='train_stats')
+devel_df = ds.collect(devel_wav_files, target_file_name=devel_labels, attr_name='devel_stats')
+
 
 # Create an instance of the AudioDataset class
 train_dataset = AudioDataset(train_wav_files, train_labels['label'].values.tolist())

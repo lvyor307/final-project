@@ -1,8 +1,8 @@
+from typing import Union
+
 import numpy as np
 import pandas as pd
 import os
-import torchaudio
-import librosa
 import plotly.graph_objects as go
 import plotly.subplots as sp
 import plotly.express as px
@@ -12,16 +12,30 @@ import Utils
 
 
 class DescriptiveStatistics:
-    def __init__(self, directory: str):
+    def __init__(self, train_wav_files: list = None, test_wav_files: list = None,
+                 devel_wav_files: list = None):
         self.train_stats = None
         self.test_stats = None
         self.devel_stats = None
-        self.directory = directory
+        self.train_wav_files = train_wav_files
+        self.test_wav_files = test_wav_files
+        self.devel_wav_files = devel_wav_files
 
-    def collect(self, audio_files_list: list, target_file_name: str, attr_name: str):
+    @staticmethod
+    def collect(audio_files_list: list, target_file_name: Union[str, pd.DataFrame]) -> pd.DataFrame:
+        """
+        Collects statistics from the audio files and stores them in a DataFrame.
+        :param audio_files_list: a list of audio file paths
+        :param target_file_name: a csv file containing the labels for the audio files or string name of the file
+        :return:
+        """
         ds_df = pd.DataFrame(columns=['label', 'sample_rate', 'duration',
                                       'mean_amplitude', 'std_amplitude', 'tempo', 'beat_times'])
-        target_file = pd.read_csv(target_file_name)
+        if isinstance(target_file_name, str):
+            target_file = pd.read_csv(target_file_name)
+        else:
+            target_file = target_file_name
+
         for file_path in audio_files_list:
             filename = file_path.split('/')[-1]
             target = target_file[target_file['filename'] == filename]['label']
@@ -32,19 +46,23 @@ class DescriptiveStatistics:
                  'mean_amplitude': waveform.mean().item(), 'std_amplitude': waveform.std().item(),
                  'tempo': tempo, 'beat_times': np.mean(beat_times)})
             ds_df = pd.concat([ds_df, tmp_df])
+        return ds_df
 
-        setattr(self, attr_name, ds_df)
-
-    def plot_feature_distribution(self, feature_name):
+    def plot_feature_distribution(self, feature_name: str, train_df: pd.DataFrame,
+                                  test_df: pd.DataFrame, devel_df: pd.DataFrame):
         """
         Plots histograms and box plots for a specified feature across the train, test, and devel datasets.
+        :param feature_name: The name of the feature to plot.
+        :param train_df: The DataFrame containing the statistics for the train dataset.
+        :param test_df: The DataFrame containing the statistics for the test dataset.
+        :param devel_df: The DataFrame containing the statistics for the devel dataset.
         """
         # Create subplots: one row, two columns
         fig = sp.make_subplots(rows=1, cols=2,
                                subplot_titles=(f"Histogram of {feature_name}", f"Box Plot of {feature_name}"))
 
         # Data preparation
-        datasets = {'Train': self.train_stats, 'Test': self.test_stats, 'Devel': self.devel_stats}
+        datasets = {'Train': train_df, 'Test': test_df, 'Devel': devel_df}
         colors = {'Train': 'blue', 'Test': 'red', 'Devel': 'green'}
 
         # Histograms
@@ -73,47 +91,49 @@ class DescriptiveStatistics:
 
         fig.show()
 
-    def plot_grouped_feature_distribution(self, feature_name, groupby_column):
+    @staticmethod
+    def plot_grouped_feature_distribution(feature_name, groupby_column, train_df: pd.DataFrame):
         """
         Plots box plots for a specified feature grouped by another column across the datasets.
-
+        :param train_df: The DataFrame containing the statistics for the train dataset.
         :param feature_name: The name of the feature to plot.
         :param groupby_column: The name of the column to group by.
         """
         # Plot using Plotly Express
-        fig = px.box(self.train_stats, x=groupby_column, y=feature_name,
+        fig = px.box(train_df, x=groupby_column, y=feature_name,
                      title=f"Distribution of {feature_name} grouped by {groupby_column}",
                      labels={groupby_column: groupby_column, feature_name: feature_name})
         fig.update_layout(showlegend=True)
         fig.show()
 
-    def anova_test(self, feature_name: str) -> float:
+    @staticmethod
+    def anova_test(feature_name: str, train_df: pd.DataFrame,
+                   test_df: pd.DataFrame, devel_df: pd.DataFrame) -> float:
         """
         Performs a one-way ANOVA test to determine if there are significant differences
         in the means of a feature across the datasets.
-
+        :param train_df: The DataFrame containing the statistics for the train dataset.
+        :param test_df: The DataFrame containing the statistics for the test dataset.
+        :param devel_df: The DataFrame containing the statistics for the devel dataset.
         :param feature_name: The name of the feature to test.
         :return: The p-value of the test.
         """
-        sample1 = self.train_stats[feature_name]
-        sample2 = self.test_stats[feature_name]
-        sample3 = self.devel_stats[feature_name]
+        sample1 = train_df[feature_name]
+        sample2 = test_df[feature_name]
+        sample3 = devel_df[feature_name]
         stat, p = f_oneway(sample1, sample2, sample3)
         print(f'ANOVA test for {feature_name}: F={stat}, p={p}')
         return p
 
-    def kruskal_test_by_label(self, feature_name: str) -> float:
+    def kruskal_test_by_label(self, feature_name: str, train_df: pd.DataFrame) -> float:
         """
         Performs the Kruskal-Wallis H-test to determine if the distribution of a continuous feature
         is the same across different labels within a given dataset.
-
+        :param train_df: The DataFrame containing the statistics for the train dataset.
         :param feature_name: The name of the feature to test across labels.
         """
-        # Retrieve the dataset
-        dataset = self.train_stats
-
         # Group data by label and collect the feature values for each group
-        groups = dataset.groupby('label')[feature_name].apply(list).values
+        groups = train_df.groupby('label')[feature_name].apply(list).values
 
         # Perform Kruskal-Wallis test
         stat, p = kruskal(*groups)
@@ -125,19 +145,11 @@ class DescriptiveStatistics:
         Run several methods.
         :return:
         """
-        all_files = os.listdir(self.directory)
-        train_wav_files = sorted([os.path.join(self.directory, file) for file in all_files if file.startswith('train')])
-        devel_wav_files = sorted([os.path.join(self.directory, file) for file in all_files if file.startswith('devel')])
-        test_wav_files = sorted([os.path.join(self.directory, file) for file in all_files if file.startswith('test')])
-        self.collect(train_wav_files, target_file_name='compare22-KSF/lab/train.csv', attr_name='train_stats')
-        self.collect(test_wav_files, target_file_name='compare22-KSF/lab/test.csv', attr_name='test_stats')
-        self.collect(devel_wav_files, target_file_name='compare22-KSF/lab/devel.csv', attr_name='devel_stats')
-        self.plot_feature_distribution('tempo')
-        self.anova_test('tempo')
-        self.kruskal_test_by_label('tempo')
-        self.plot_grouped_feature_distribution(feature_name='tempo', groupby_column='label')
-
-
-if __name__ == '__main__':
-    ds = DescriptiveStatistics(directory='compare22-KSF/wav')
-    ds.run()
+        train_stats = self.collect(self.train_wav_files, target_file_name='compare22-KSF/lab/train.csv')
+        test_stats = self.collect(self.test_wav_files, target_file_name='compare22-KSF/lab/test.csv')
+        devel_stats = self.collect(self.devel_wav_files, target_file_name='compare22-KSF/lab/devel.csv')
+        self.plot_feature_distribution('tempo', train_df=train_stats,
+                                       test_df=test_stats, devel_df=devel_stats)
+        self.anova_test('tempo', train_df=train_stats, test_df=test_stats, devel_df=devel_stats)
+        self.kruskal_test_by_label('tempo', train_df=train_stats)
+        self.plot_grouped_feature_distribution(feature_name='tempo', groupby_column='label', train_df=train_stats)
