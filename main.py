@@ -35,10 +35,12 @@ label_map = {
 train_labels['label'] = train_labels['label'].map(label_map)
 devel_labels['label'] = devel_labels['label'].map(label_map)
 
+# Create an instance of the DescriptiveStatistics class and run the statistical tests and plots
 ds = DescriptiveStatistics(train_wav_files, test_wav_files, devel_wav_files)
 ds.run()
-train_df = ds.collect(train_wav_files, target_file_name=train_labels, attr_name='train_stats')
-devel_df = ds.collect(devel_wav_files, target_file_name=devel_labels, attr_name='devel_stats')
+# Collect the statistics for the train and devel datasets
+train_df = ds.collect(train_wav_files, target_file_name=train_labels)
+devel_df = ds.collect(devel_wav_files, target_file_name=devel_labels)
 
 
 # Create an instance of the AudioDataset class

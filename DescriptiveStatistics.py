@@ -29,26 +29,16 @@ class DescriptiveStatistics:
         :param target_file_name: a csv file containing the labels for the audio files or string name of the file
         :return:
         """
-        ds_df = pd.DataFrame(columns=['label', 'sample_rate', 'duration',
-                                      'mean_amplitude', 'std_amplitude', 'tempo', 'beat_times'])
         if isinstance(target_file_name, str):
             target_file = pd.read_csv(target_file_name)
         else:
             target_file = target_file_name
 
-        for file_path in audio_files_list:
-            filename = file_path.split('/')[-1]
-            target = target_file[target_file['filename'] == filename]['label']
-            waveform, sample_rate = Utils.read_file(file_path)
-            tempo, beat_times = Utils.calculate_tempo_and_beats(file_path, sample_rate)
-            tmp_df = pd.DataFrame(
-                {'label': target, 'sample_rate': sample_rate, 'duration': waveform.shape[1] / sample_rate,
-                 'mean_amplitude': waveform.mean().item(), 'std_amplitude': waveform.std().item(),
-                 'tempo': tempo, 'beat_times': np.mean(beat_times)})
-            ds_df = pd.concat([ds_df, tmp_df])
+        ds_df = Utils.apply_methods(target_file, audio_files_list, methods=['tempo_and_beats'])
         return ds_df
 
-    def plot_feature_distribution(self, feature_name: str, train_df: pd.DataFrame,
+    @staticmethod
+    def plot_feature_distribution(feature_name: str, train_df: pd.DataFrame,
                                   test_df: pd.DataFrame, devel_df: pd.DataFrame):
         """
         Plots histograms and box plots for a specified feature across the train, test, and devel datasets.
