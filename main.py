@@ -2,6 +2,8 @@ import os
 
 import pandas as pd
 from torch.utils.data import DataLoader
+
+import Utils
 from AudioDataset import AudioDataset
 from DescriptiveStatistics import DescriptiveStatistics
 from HyperParameterTuning import HyperParameterTuning
@@ -36,11 +38,17 @@ train_labels['label'] = train_labels['label'].map(label_map)
 devel_labels['label'] = devel_labels['label'].map(label_map)
 
 # Create an instance of the DescriptiveStatistics class and run the statistical tests and plots
-ds = DescriptiveStatistics(train_wav_files, test_wav_files, devel_wav_files)
-ds.run()
-# Collect the statistics for the train and devel datasets
-train_df = ds.collect(train_wav_files, target_file_name=train_labels)
-devel_df = ds.collect(devel_wav_files, target_file_name=devel_labels)
+# ds = DescriptiveStatistics(train_wav_files, test_wav_files, devel_wav_files)
+# ds.run()
+# Collect the features for the train and devel datasets
+methods = ['tempo_and_beats', 'spectral_centroid', 'spectral_bandwidth', 'spectral_contrast',
+           'spectral_flatness', 'spectral_rolloff', 'zero_crossing_rate', 'rms_energy']
+train_df = Utils.apply_methods(target_file=train_labels,
+                               audio_files_list=train_wav_files,
+                               methods=methods)
+devel_df = Utils.apply_methods(target_file=devel_labels,
+                               audio_files_list=devel_wav_files,
+                               methods=methods)
 
 
 # Create an instance of the AudioDataset class
