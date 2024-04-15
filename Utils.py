@@ -147,5 +147,5 @@ def apply_methods(target_file: pd.DataFrame, audio_files_list: list, methods: li
 
         all_data.append(features)
         # Convert the list of dictionaries to a DataFrame
-    ds_df = pd.DataFrame(all_data)
-    return ds_df
+    res = pd.DataFrame(all_data)
+    return res
