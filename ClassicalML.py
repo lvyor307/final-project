@@ -29,9 +29,6 @@ class Preprocessor:
         return X.set_index(index_name)
 
 
-import numpy as np
-
-
 class BaseModel:
     def __init__(self, name, model):
         self.name = name
@@ -51,26 +48,10 @@ class BaseModel:
         return accuracy_score(y, predictions)
 
     def tune_hyperparameters(self, X, y, param_grid, cv=3, scoring='accuracy'):
-        total_combinations = np.prod([len(v) for v in param_grid.values()]) * cv
-        print(f"Tuning {self.name} - Total combinations to evaluate: {total_combinations}")
-
-        def progress_print(n, total_combinations):
-            print(f"Progress: {n}/{total_combinations} configurations evaluated.")
-
-        current_combination = [0]  # Mutable object to track state in callback
-
-        def verbose_callback(result):
-            current_combination[0] += 1
-            progress_print(current_combination[0], total_combinations)
-
-        grid_search = GridSearchCV(self.model, param_grid, cv=cv, scoring=scoring, n_jobs=-1, verbose=0,
-                                   refit=False, return_train_score=False, error_score='raise')
-        grid_search.fit(X, y, callback=verbose_callback)
+        grid_search = GridSearchCV(self.model, param_grid, cv=cv, scoring=scoring, n_jobs=-1)
+        grid_search.fit(X, y)
         self.best_params = grid_search.best_params_
         print(f"Best parameters for {self.name}: {self.best_params}")
-        # Refit manually to use the best parameters
-        self.model.set_params(**self.best_params)
-        self.model.fit(X, y)
 
 
 class RandomForestModel(BaseModel):
