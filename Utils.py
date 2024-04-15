@@ -144,7 +144,9 @@ def apply_methods(target_file: pd.DataFrame, audio_files_list: list, methods: li
         for method_name in methods:
             method = methods_dict[method_name]
             features.update(method(file_path, sample_rate))
+            print(f'Finished processing {method_name} for {filename}')
 
+        # Append the features dictionary to the list
         all_data.append(features)
         # Convert the list of dictionaries to a DataFrame
     res = pd.DataFrame(all_data)
